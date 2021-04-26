@@ -7,7 +7,7 @@
 Component to read specific information from a QR-Code
 
 ## Expectation to the Environment
-- QRScanner = require("[qr-scanner](https://www.npmjs.com/package/qr-scanner").default
+- QRScanner = require("[qr-scanner](https://www.npmjs.com/package/qr-scanner)").default
 - video element available in the DOM which looks like this:
     ```pug
     #qrreader-background
