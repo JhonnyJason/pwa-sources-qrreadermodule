@@ -1,16 +1,11 @@
-qrreadermodule = {name: "qrreadermodule"}
 ############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["qrreadermodule"]?  then console.log "[qrreadermodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+#region debug
+import { createLogFunctions } from "thingy-debug"
+{log, olog} = createLogFunctions("qrreadermodule")
 #endregion
 
 ############################################################
-QRScanner = require("qr-scanner").default
+import QRScanner from "qr-scanner"
 msgBox = null
 
 ############################################################
@@ -19,7 +14,7 @@ currentResolver = null
 hasCamera = false
 
 ############################################################
-qrreadermodule.initialize = ->
+export initialize = ->
     log "qrreadermodule.initialize"
     msgBox = allModules.messageboxmodule
 
@@ -56,7 +51,7 @@ readerClicked = ->
 
 
 ############################################################
-qrreadermodule.read = ->
+export read = ->
     log "qrreadermodule.read"
     if !hasCamera
         msgBox.error("We don't have a Camera!")
@@ -68,4 +63,3 @@ qrreadermodule.read = ->
     return new Promise (resolve) -> currentResolver = resolve
 
     
-module.exports = qrreadermodule
