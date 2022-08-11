@@ -6,7 +6,8 @@ import { createLogFunctions } from "thingy-debug"
 
 ############################################################
 import QRScanner from "qr-scanner"
-msgBox = null
+import * as msgBox from "./messageboxmodule.js"
+import * as utl from "./utilsmodule.js"
 
 ############################################################
 currentReader = null
@@ -16,29 +17,42 @@ hasCamera = false
 ############################################################
 export initialize = ->
     log "qrreadermodule.initialize"
-    msgBox = allModules.messageboxmodule
-
-    QRScanner.WORKER_PATH = "/scannerworker.js"
     hasCamera = await QRScanner.hasCamera()
     log hasCamera
-    
     return unless hasCamera
+    
+    options = 
+        maxScansPerSecond: 5
+        highlightCodeOutline: true
+
     #qrreaderVideoElement.
-    currentReader = new QRScanner(qrreaderVideoElement, dataRead)
+    currentReader = new QRScanner(qrreaderVideoElement, dataRead, options)
 
     qrreaderBackground.addEventListener("click", readerClicked)
     return
 
-
 ############################################################
 dataRead = (data) ->
     log "dataRead"
+    data = data.data
     log data.length
+    olog data
     if data.length == 64 and currentResolver?
         currentResolver(data)
         currentResolver = null
         currentReader.stop()
         qrreaderBackground.classList.remove("active")
+        return
+    if data.length == 66 and currentResolver? and data[0] == '0' and data[1] == 'x'
+        data = utl.strip0x(data)
+        currentResolver(data)
+        currentResolver = null
+        currentReader.stop()
+        qrreaderBackground.classList.remove("active")
+        return
+    
+    ## else
+    msgBox.error("Unknown Format!")
     return
 
 readerClicked = ->
@@ -48,7 +62,6 @@ readerClicked = ->
     currentResolver = null
     qrreaderBackground.classList.remove("active")
     return
-
 
 ############################################################
 export read = ->
