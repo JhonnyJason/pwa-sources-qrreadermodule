@@ -8,6 +8,7 @@ import { createLogFunctions } from "thingy-debug"
 import QRScanner from "qr-scanner"
 import * as msgBox from "./messageboxmodule.js"
 import * as utl from "./utilsmodule.js"
+import * as cfg from "./configmodule.js"
 
 ############################################################
 currentReader = null
@@ -34,25 +35,38 @@ export initialize = ->
 ############################################################
 dataRead = (data) ->
     log "dataRead"
+    return unless currentResolver?
     data = data.data
     log data.length
     olog data
-    if data.length == 64 and currentResolver?
-        currentResolver(data)
-        currentResolver = null
-        currentReader.stop()
-        qrreaderBackground.classList.remove("active")
-        return
-    if data.length == 66 and currentResolver? and data[0] == '0' and data[1] == 'x'
+
+    if cfg.qrScanNoFilter then return resolveRawData(data)
+
+    ## Default filter is for Hex Keys of 32 bytes -> 64 hex characters
+    try return extractHexCodeKey(data)
+    catch err then msgBox.error(err.message)
+
+    ## more options?
+    return
+
+resolveRawData = (data) ->
+    log "resolveRawData"
+    currentResolver(data)
+    currentResolver = null
+    currentReader.stop()
+    qrreaderBackground.classList.remove("active")
+    return
+
+extractHexCodeKey = (data) ->
+    log "extractHexCodeKey"
+    if data.length == 66 and data[0] == '0' and data[1] == 'x'
         data = utl.strip0x(data)
-        currentResolver(data)
-        currentResolver = null
-        currentReader.stop()
-        qrreaderBackground.classList.remove("active")
-        return
     
-    ## else
-    msgBox.error("Unknown Format!")
+    if data.length == 64 
+        if utl.isValidKey(data) then return resolveRawData(data)
+        else throw new Error("Invalid Key!")
+    
+    throw new Error("Invalid Key!")
     return
 
 readerClicked = ->
