@@ -15,15 +15,18 @@ currentReader = null
 currentResolver = null
 hasCamera = false
 
+onlyHex =  !(cfg.qrScanNoFilter? and cfg.qrScanNoFilter)
+
+
 ############################################################
 export initialize = ->
     log "qrreadermodule.initialize"
     hasCamera = await QRScanner.hasCamera()
     log hasCamera
     return unless hasCamera
-    
+
     options = 
-        maxScansPerSecond: 5
+        maxScansPerSecond: 3
         highlightCodeOutline: true
 
     #qrreaderVideoElement.
@@ -40,7 +43,7 @@ dataRead = (data) ->
     log data.length
     olog data
 
-    if cfg.qrScanNoFilter then return resolveRawData(data)
+    if !onlyHex then return resolveRawData(data)
 
     ## Default filter is for Hex Keys of 32 bytes -> 64 hex characters
     try return extractHexCodeKey(data)
@@ -89,4 +92,5 @@ export read = ->
 
     return new Promise (resolve) -> currentResolver = resolve
 
-    
+export allowNonHex = (allow) -> onlyHex = !allow
+export stop = -> readerClicked()
